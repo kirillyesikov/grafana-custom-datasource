@@ -7,17 +7,21 @@ grafana:
   plugins:
     - kyesikov/my-grafana-datasource:latest
 
-  adminPassword: admin  # Admin password for Grafana
+  
+  extraConfigMaps:
+    - name: grafana-datasource-config
+      mountPath: /etc/grafana/provisioning/datasources
+
 
   # To mount your custom datasource plugin into the Grafana pod
   volumeMounts:
-    - name: custom-plugins
-      mountPath: /etc/grafana/provisioning/plugins
+    - name: grafana-datasource-config
+      mountPath: /etc/grafana/provisioning/datasources
   volumes:
-    - name: custom-plugins
+    - name: grafana-datasource-config
       emptyDir: {}
 
-  # Optionally, configure Grafana to start with a custom datasource automatically
+      # Optionally, configure Grafana to start with a custom datasource automatically
   provisioning:
     datasources:
       enabled: true
