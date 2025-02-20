@@ -1,0 +1,39 @@
+grafana:
+  image:
+    repository: grafana/grafana
+    tag: latest
+
+  # Optional: Set your custom datasource Docker image
+  plugins:
+    - kyesikov/my-grafana-datasource:latest
+
+  adminPassword: admin  # Admin password for Grafana
+
+  # To mount your custom datasource plugin into the Grafana pod
+  volumeMounts:
+    - name: custom-plugins
+      mountPath: /etc/grafana/provisioning/plugins
+  volumes:
+    - name: custom-plugins
+      emptyDir: {}
+
+  # Optionally, configure Grafana to start with a custom datasource automatically
+  provisioning:
+    datasources:
+      enabled: true
+      # Here you can configure the datasource using a .yaml file
+      # Example: Adding a custom data source
+      # Add the file `datasource.yaml` with the necessary configurations
+      # in your Kubernetes setup (more details below)
+
+    dashboards:
+      enabled: true
+      # If you want Grafana to provision dashboards automatically
+      # Add your custom dashboards here
+secret:
+  enabled: false      
+
+# For Kubernetes Service configuration
+service:
+  type: LoadBalancer  # Or NodePort if you are using Minikube or a local cluster
+  port: 3000
