@@ -1,4 +1,4 @@
-module github.com/yourusername/grafana-custom-datasource
+module github.com/kirillyesikov/grafana-custom-datasource
 
 go 1.23.6
 

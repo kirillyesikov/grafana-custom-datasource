@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-datasource
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-datasource
+  template:
+    metadata:
+      labels:
+        app: grafana-datasource
+    spec:
+      containers:
+        - name: grafana-datasource
+          image: kyesikov/my-grafana-datasource:latest
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: grafana-datasource-config
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+      volumes:
+        - name: grafana-datasource-config
+          configMap:
+            name: grafana-datasource-config
