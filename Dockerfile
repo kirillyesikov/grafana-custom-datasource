@@ -20,4 +20,3 @@ COPY --from=builder /plugin-datasource /var/lib/grafana/plugins/my-plugin/plugin
 # Copy metadata file (required for Grafana to detect the plugin)
 COPY plugin.json /var/lib/grafana/plugins/my-plugin/
 
-CMD ["/run.sh"]

@@ -23,5 +23,4 @@ spec:
               readOnly: false
       volumes:
         - name: my-plugin
-          configMap:
-            name: grafana-datasource-config
+        
