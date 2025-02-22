@@ -16,12 +16,12 @@ spec:
         - name: grafana-datasource
           image: kyesikov/my-grafana-datasource:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           volumeMounts:
-            - name: grafana-datasource-config
-              mountPath: /etc/grafana/provisioning/datasources
-              readOnly: true
+            - name: my-plugin
+              mountPath: /var/lib/grafana/plugins
+              readOnly: false
       volumes:
-        - name: grafana-datasource-config
+        - name: my-plugin
           configMap:
             name: grafana-datasource-config

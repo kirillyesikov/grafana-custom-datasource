@@ -1,0 +1,8 @@
+{
+    "type": "datasource",
+    "name": "kirilldata",
+    "id": "myds-plugin-id",
+    "backend": true,
+    "executable": "plugin-datasource"
+  }
+  

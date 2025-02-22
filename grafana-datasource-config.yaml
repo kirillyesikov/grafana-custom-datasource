@@ -14,5 +14,4 @@ data:
       type: datasource
       access: proxy
       isDefault: true
-      jsonData:
-        key: value
+ 

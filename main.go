@@ -2,57 +2,83 @@ package main
 
 import (
 	"context"
-	"log"
+	"net/http"
+	"os"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 )
 
-// CustomDatasource struct
-type CustomDatasource struct{}
-
-// QueryData processes Grafana queries
-func (d *CustomDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	response := backend.NewQueryDataResponse()
-
-	for _, q := range req.Queries {
-		res := d.handleQuery(q)
-		response.Responses[q.RefID] = res
-	}
-
-	return response, nil
+type testDataSource struct {
+	httpClient *http.Client
+	backend.CallResourceHandler
 }
 
-func (d *CustomDatasource) handleQuery(q backend.DataQuery) backend.DataResponse {
-	// Create response structure
-	response := backend.DataResponse{}
+func newDataSource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+	opts, err := settings.HTTPClientOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	// Example values for the query
-	time := q.TimeRange.From.Unix() // Use the timestamp from the query's time range
-	value := 42                     // Simulated value for the query
-	status := "ok"                  // Simulated status for the query
+	client, err := httpclient.New(opts)
+	if err != nil {
+		return nil, err
+	}
 
-	// Create fields with the actual data
-	timeField := data.NewField("time", nil, []int64{time})
-	valueField := data.NewField("value", nil, []float64{float64(value)})
-	statusField := data.NewField("status", nil, []string{status})
+	ds := &testDataSource{
+		httpClient: client,
+	}
 
-	// Create a data frame to hold the fields
-	frame := data.NewFrame("response", timeField, valueField, statusField)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/test", ds.handleTest)
+	ds.CallResourceHandler = httpadapter.New(mux)
 
-	// Add the frame to the response
-	response.Frames = append(response.Frames, frame)
+	return ds, nil
+}
 
-	return response
+func (ds *testDataSource) Dispose() {
+	// Cleanup
+}
+
+func (ds *testDataSource) CheckHealth(_ context.Context, _ *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+	// Handle request
+	resp, err := ds.httpClient.Get("http://localhost:3000/api/health")
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+	return nil, nil
+}
+
+func (ds *testDataSource) QueryData(_ context.Context, _ *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	var resp *backend.QueryDataResponse
+	// Handle request
+	httpResp, err := ds.httpClient.Get("http://localhost:3000/api/health")
+	if err != nil {
+		return nil, err
+	}
+	httpResp.Body.Close()
+
+	return resp, err
+}
+
+func (ds *testDataSource) handleTest(rw http.ResponseWriter, _ *http.Request) {
+	// Handle request
+	resp, err := ds.httpClient.Get("http://localhost:3000/api/health")
+	if err != nil {
+		rw.WriteHeader(500)
+		return
+	}
+	resp.Body.Close()
 }
 
 func main() {
-	// Serve the plugin
-	err := datasource.Serve(datasource.ServeOpts{
-		QueryDataHandler: &CustomDatasource{},
-	})
+	err := datasource.Manage("myds-plugin-id", newDataSource, datasource.ManageOpts{})
 	if err != nil {
-		log.Fatalf("Failed to start plugin: %v", err)
+		backend.Logger.Error(err.Error())
+		os.Exit(1)
 	}
 }
