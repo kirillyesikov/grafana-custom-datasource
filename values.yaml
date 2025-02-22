@@ -3,31 +3,30 @@ grafana:
     repository: grafana/grafana
     tag: latest
 
+plugins:
+    - kirilldata
 
-
+extraVolumeMounts:
   # To mount your custom datasource plugin into the Grafana pod
-  volumeMounts:
     - name: my-plugin
       mountPath: /var/lib/grafana/plugins
-  volumes:
-    - name: my-plugin
-      emptyDir: {}
 
       # Optionally, configure Grafana to start with a custom datasource automatically
-  datasources:
-    datasource.yaml:
-      apiVersion: 1
-      datasources:  
-      - name: kirill
-        type: datasource
-        url: http://localhot:3000/api/health/
-        access: proxy
+datasources:
+   datasource.yaml:
+     apiVersion: 1
+     datasources:  
+     - name: kirill
+       type: datasource
+       url: http://localhot:3000/api/health/
+       access: proxy
+       isDefault: true
       # Here you can configure the datasource using a .yaml file
       # Example: Adding a custom data source
       # Add the file `datasource.yaml` with the necessary configurations
       # in your Kubernetes setup (more details below)
 
-    dashboards:
+dashboards:
       enabled: true
       # If you want Grafana to provision dashboards automatically
       # Add your custom dashboards here
@@ -38,3 +37,8 @@ secret:
 service:
   type: LoadBalancer  # Or NodePort if you are using Minikube or a local cluster
   port: 3000
+
+
+
+
+
